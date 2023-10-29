@@ -1,6 +1,6 @@
 import pygame;
 import random;
-import sys
+import sys;
 
 
 pygame.init();
@@ -38,14 +38,15 @@ def desenhar_cobra(tamanho, pixels):
         pygame.draw.rect(tela, azul, [pixel[0], pixel[1], tamanho, tamanho])
 
 
-def desenhar_pontuacao(pontuacao):
+def desenhar_pontuacao(pontuacao, nome):
     fonte = pygame.font.SysFont("Helvetica", 25);
-    texto = fonte.render(f"Pontos: {pontuacao}", True, branco);
+    texto = fonte.render(f"{nome}, pontos: {pontuacao}", True, branco);
     tela.blit(texto, [1, 1]);
     
 def selecionar_velocidade(tecla):
     velocidade_x = 0;
     velocidade_y = 0;
+   
     if tecla == pygame.K_DOWN:
         velocidade_x = 0
         velocidade_y = tamanho_quadrado
@@ -62,7 +63,7 @@ def selecionar_velocidade(tecla):
         
     return velocidade_x, velocidade_y
 
-def rodar_jogo():
+def rodar_jogo(nome):
     fim_jogo = False
     
     x = largura/2;
@@ -108,7 +109,7 @@ def rodar_jogo():
                 
         desenhar_cobra(tamanho_quadrado, pixels);
         #desenha pontos
-        desenhar_pontuacao(tamanho_cobra - 1);
+        desenhar_pontuacao(tamanho_cobra - 1, nome);
         
         
         #atualização da tela
@@ -124,29 +125,45 @@ def rodar_jogo():
         
 #menu
 
-def mostrar_menu(pontuacao = '0'):
-    while True:
+def mostrar_menu(pontuacao='0'):
+    nome_jogador = ""
+    fonte = pygame.font.Font(None, 36)
+    clock = pygame.time.Clock()
+
+    enquanto_no_menu = True
+    while enquanto_no_menu:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    # Inicia o jogo quando o jogador pressiona Enter (retorno)
+                    enquanto_no_menu = False
+                    rodar_jogo(nome_jogador)
+                elif event.key == pygame.K_BACKSPACE:
+                    # Remove o último caractere quando o jogador pressiona Backspace
+                    nome_jogador = nome_jogador[:-1]
+                else:
+                    # Adiciona caracteres à entrada do jogador
+                    nome_jogador += event.unicode
 
-            # Lógica para manipular eventos de teclado (por exemplo, pressionar ESPAÇO para iniciar o jogo)
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    return rodar_jogo()
-        # Desenhe elementos do menu na tela
         tela.fill((0, 0, 0))  # Preenche a tela com fundo preto
-        fonte = pygame.font.Font(None, 36)
+        texto = fonte.render("Digite seu nome: " + nome_jogador, True, (255, 255, 255))
+        tela.blit(texto, (largura // 2 - texto.get_width() // 2, altura // 2 - texto.get_height() // 0.5))
+
         texto1 = fonte.render(f"Ultima pontuação {pontuacao}", True, (255, 255, 255))
         texto = fonte.render("Pressione ESPAÇO para iniciar", True, (255, 255, 255))  # Texto branco
         tela.blit(texto, (largura // 2 - texto.get_width() // 2, altura // 2 - texto.get_height() // 2))
-        tela.blit(texto1, (largura // 2 - texto1.get_width() // 2, altura // 2 + texto.get_height()))  # Posição abaixo do texto principal
+        tela.blit(texto1, (largura // 2 - texto1.get_width() // 2, altura // 2 + texto.get_height()))
+        
         pygame.display.flip()  # Atualiza a tela
+        clock.tick(30)  # Limita a taxa de atualização da tela para 30 frames por segundo
 
-# Chame a função do menu antes de começar o jogo principal
+    return nome_jogador
+
+# Exemplo de uso:
 mostrar_menu()
-
 
 
 
