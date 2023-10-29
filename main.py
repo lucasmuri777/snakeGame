@@ -1,5 +1,7 @@
 import pygame;
 import random;
+import sys
+
 
 pygame.init();
 pygame.display.set_caption("Snake Game");
@@ -89,6 +91,7 @@ def rodar_jogo():
         
         #atualizar a cobra
         if x < 0 or x >= largura or y < 0 or y >= altura:
+            mostrar_menu(tamanho_cobra - 1);
             fim_jogo = True;
         
         x += velocidade_x;
@@ -119,9 +122,31 @@ def rodar_jogo():
         relogio.tick(velocidade_jogo);
         
         
-    
-rodar_jogo();
-#criar um loop infinito
+#menu
+
+def mostrar_menu(pontuacao = '0'):
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            # Lógica para manipular eventos de teclado (por exemplo, pressionar ESPAÇO para iniciar o jogo)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    return rodar_jogo()
+        # Desenhe elementos do menu na tela
+        tela.fill((0, 0, 0))  # Preenche a tela com fundo preto
+        fonte = pygame.font.Font(None, 36)
+        texto1 = fonte.render(f"Ultima pontuação {pontuacao}", True, (255, 255, 255))
+        texto = fonte.render("Pressione ESPAÇO para iniciar", True, (255, 255, 255))  # Texto branco
+        tela.blit(texto, (largura // 2 - texto.get_width() // 2, altura // 2 - texto.get_height() // 2))
+        tela.blit(texto1, (largura // 2 - texto1.get_width() // 2, altura // 2 + texto.get_height()))  # Posição abaixo do texto principal
+        pygame.display.flip()  # Atualiza a tela
+
+# Chame a função do menu antes de começar o jogo principal
+mostrar_menu()
+
 
 
 
