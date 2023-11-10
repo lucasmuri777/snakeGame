@@ -162,8 +162,5 @@ def mostrar_menu(pontuacao='0'):
 
     return nome_jogador
 
-# Exemplo de uso:
-mostrar_menu()
-
 
 
