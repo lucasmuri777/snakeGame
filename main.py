@@ -1,6 +1,8 @@
 import pygame;
 import random;
 import sys;
+from db import cadastra_usua
+from menu import get_nome_jogador
 
 
 pygame.init();
@@ -11,6 +13,8 @@ largura, altura = 600, 400;
 tela = pygame.display.set_mode((largura, altura));
 
 relogio = pygame.time.Clock();
+
+pontuacao = 0
 
 #cores RGB
 fundo = (0, 153, 51);
@@ -63,7 +67,7 @@ def selecionar_velocidade(tecla):
         
     return velocidade_x, velocidade_y
 
-def rodar_jogo(nome):
+def rodar_jogo(nome, pontuacao):
     fim_jogo = False
     
     x = largura/2;
@@ -84,6 +88,7 @@ def rodar_jogo(nome):
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 fim_jogo = True;
+
             elif evento.type == pygame.KEYDOWN:
                 velocidade_x, velocidade_y = selecionar_velocidade(evento.key);
         
@@ -136,31 +141,42 @@ def mostrar_menu(pontuacao='0'):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
             elif event.type == pygame.KEYDOWN:
+
                 if event.key == pygame.K_RETURN:
                     # Inicia o jogo quando o jogador pressiona Enter (retorno)
                     enquanto_no_menu = False
-                    rodar_jogo(nome_jogador)
+                    rodar_jogo(nome_jogador, pontuacao)
+
                 elif event.key == pygame.K_BACKSPACE:
                     # Remove o último caractere quando o jogador pressiona Backspace
                     nome_jogador = nome_jogador[:-1]
+
                 else:
                     # Adiciona caracteres à entrada do jogador
                     nome_jogador += event.unicode
+
 
         tela.fill((0, 0, 0))  # Preenche a tela com fundo preto
         texto = fonte.render("Digite seu nome: " + nome_jogador, True, (255, 255, 255))
         tela.blit(texto, (largura // 2 - texto.get_width() // 2, altura // 2 - texto.get_height() // 0.5))
 
+
         texto1 = fonte.render(f"Ultima pontuação {pontuacao}", True, (255, 255, 255))
-        texto = fonte.render("Pressione ESPAÇO para iniciar", True, (255, 255, 255))  # Texto branco
+        texto = fonte.render("Pressione ENTER para iniciar", True, (255, 255, 255))  # Texto branco
         tela.blit(texto, (largura // 2 - texto.get_width() // 2, altura // 2 - texto.get_height() // 2))
         tela.blit(texto1, (largura // 2 - texto1.get_width() // 2, altura // 2 + texto.get_height()))
-        
-        pygame.display.flip()  # Atualiza a tela
-        clock.tick(30)  # Limita a taxa de atualização da tela para 30 frames por segundo
 
-    return nome_jogador
+        pygame.display.flip()  # Atualiza a tela
+        clock.tick(60)  # Limita a taxa de atualização da tela para 30 frames por segundo
+
+    else:
+        cadastra_usua(nome_jogador, pontuacao)
+
+
+
+
 
 
 

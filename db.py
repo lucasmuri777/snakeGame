@@ -14,45 +14,32 @@ def conexao_db():
 
 con = conexao_db()
 
-def get_usua_list():
-    sql = '''
-           select id_usua,
-                  nome_usua,
-                  pont_usua,
-                  date_format(data_jogd, '%d/%m/%Y') data_jogd 
-             from usuario
-           '''
+def get_list_usuarios():
+    sql = " select nome_usua, pont_usua, date_format(data_jogd, '%d/%m/%Y') data_jogd from usuario order by pont_usua desc "
 
     cursor = con.cursor()
 
     cursor.execute(sql)
 
-    rslt = cursor.fetchall()
+    resultado = cursor.fetchall()
 
-    for x in rslt:
-        print(x)
+    return resultado
 
 
-def cadastra_usua(nome_usua):
-    sql = 'insert into usuario (nome_usua) values (%s)'
+def cadastra_usua(nome_usua, pont_usua):
+    sql = '''
+        insert into usuario (
+            nome_usua, 
+            pont_usua, 
+            data_jogd
+        ) values (
+            %s, 
+            %s, 
+            sysdate()
+        )'''
 
     cursor = con.cursor()
 
-    vlr = nome_usua
-
-    cursor.execute(sql, vlr)
+    cursor.execute(sql, [nome_usua, pont_usua])
 
     con.commit()
-
-
-def atualiza_pont(id_usua, pont):
-    sql = f'''
-        update usuario set 
-            pont_usua = {pont}, 
-            data_jogd = sysdate()
-        where id_usua = {id_usua}
-    '''
-
-
-cadastra_usua(['lallaslas'])
-

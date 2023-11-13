@@ -1,36 +1,38 @@
 import pygame as pg
 from menu import menu
-from db import get_usua_list
-from main import rodar_jogo
+from main import mostrar_menu, altura, largura
+from pontuacoes import mostra_lista
 
 pg.init()
 pg.font.init()
 
-tela = pg.display.set_mode((800, 600))
-fonte = pg.font.SysFont('Consolas', 30)
-texto_menu = fonte.render(menu(), 1, (255, 100, 100))
+tela = pg.display.set_mode((largura, altura))
+fonte = pg.font.SysFont('Helvetica', 20)
+texto_menu = fonte.render(menu(), 1, 'white')
 clock = pg.time.Clock()
-sessao = True
+rodando = True
 
-while sessao:
+while rodando:
     for e in pg.event.get():
         if e.type == pg.QUIT:
-            sessao = False
+            rodando = False
 
         if e.type == pg.KEYDOWN:
             if e.key == 49:
-                rodar_jogo()
+                mostrar_menu()
+
             elif e.key == 50:
-                get_usua_list()
+                mostra_lista()
+
             else:
                 print('Pressione uma tecla válida.')
 
-    tela.fill('green')
+    tela.fill('black')
 
-    tela.blit(texto_menu, (0, 0))
+    tela.blit(texto_menu, (170, 160))
 
     pg.display.flip()
 
-    clock.tick(60)
-
-pg.quit()
+else:
+    pg.font.quit()
+    pg.quit()
