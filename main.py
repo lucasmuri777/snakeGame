@@ -1,24 +1,25 @@
 import pygame;
 import random;
 import sys;
-from db import cadastra_usua
-from menu import get_nome_jogador
-
+import sqlite3;
 
 pygame.init();
+pygame.font.init();
 pygame.display.set_caption("Snake Game");
 
-largura, altura = 600, 400;
+largura, altura = 800, 600;
 
 tela = pygame.display.set_mode((largura, altura));
 
 relogio = pygame.time.Clock();
+fonte = pygame.font.SysFont("Calibri", 25);
 
 pontuacao = 0
 
 #cores RGB
 fundo = (0, 153, 51);
 branco = (255, 255, 255);
+preto = (0, 0 , 0);
 azul = (20, 20, 255);
 vermelho = (255, 20, 20);
 
@@ -26,6 +27,51 @@ vermelho = (255, 20, 20);
 #variaveis da cobrinha
 tamanho_quadrado = 10;
 velocidade_jogo = 15;
+
+def conexao_db():
+    db = sqlite3.connect('snake_game.db')
+
+    return db
+
+
+def get_list_usuarios():
+    sql = " select nome_usua, pont_usua, data_jogd from usuario order by pont_usua desc "
+
+    con = conexao_db()
+
+    cursor = con.cursor()
+
+    cursor.execute(sql)
+
+    resultado = cursor.fetchall()
+
+    con.close()
+
+    return resultado
+
+
+def cadastra_usua(nome_usua, pont_usua):
+    con = conexao_db()
+
+    sql = '''
+        insert into usuario (
+            nome_usua, 
+            pont_usua, 
+            data_jogd
+        ) values (
+            ?, 
+            ?, 
+            date('now')
+        )'''
+
+    cursor = con.cursor()
+
+    cursor.execute(sql, (nome_usua, pont_usua))
+
+    con.commit()
+
+    con.close()
+
 
 def gerar_comida():
     comida_x = round(random.randrange(0, largura - tamanho_quadrado) / 20.0) * 20.0
@@ -67,7 +113,7 @@ def selecionar_velocidade(tecla):
         
     return velocidade_x, velocidade_y
 
-def rodar_jogo(nome, pontuacao):
+def rodar_jogo(nome):
     fim_jogo = False
     
     x = largura/2;
@@ -97,7 +143,6 @@ def rodar_jogo(nome, pontuacao):
         
         #atualizar a cobra
         if x < 0 or x >= largura or y < 0 or y >= altura:
-            mostrar_menu(tamanho_cobra - 1);
             fim_jogo = True;
         
         x += velocidade_x;
@@ -125,15 +170,16 @@ def rodar_jogo(nome, pontuacao):
             tamanho_cobra += 1;
             comida_x, comida_y = gerar_comida();
         
-        relogio.tick(velocidade_jogo);
-        
-        
-#menu
+        relogio.tick(velocidade_jogo) # Limita a taxa de atualização da tela para 60 frames por segundo
+
+    pontuacao = tamanho_cobra - 1
+
+    return [nome, pontuacao]
+
+# menu
 
 def mostrar_menu(pontuacao='0'):
     nome_jogador = ""
-    fonte = pygame.font.Font(None, 36)
-    clock = pygame.time.Clock()
 
     enquanto_no_menu = True
     while enquanto_no_menu:
@@ -147,7 +193,9 @@ def mostrar_menu(pontuacao='0'):
                 if event.key == pygame.K_RETURN:
                     # Inicia o jogo quando o jogador pressiona Enter (retorno)
                     enquanto_no_menu = False
-                    rodar_jogo(nome_jogador, pontuacao)
+                    dados = rodar_jogo(nome_jogador)
+                    cadastra_usua(dados[0], dados[1])
+                    mostra_lista()
 
                 elif event.key == pygame.K_BACKSPACE:
                     # Remove o último caractere quando o jogador pressiona Backspace
@@ -158,25 +206,87 @@ def mostrar_menu(pontuacao='0'):
                     nome_jogador += event.unicode
 
 
-        tela.fill((0, 0, 0))  # Preenche a tela com fundo preto
-        texto = fonte.render("Digite seu nome: " + nome_jogador, True, (255, 255, 255))
+        tela.fill(preto)  # Preenche a tela com fundo preto
+        texto = fonte.render("Digite seu nome: " + nome_jogador, True, branco)
         tela.blit(texto, (largura // 2 - texto.get_width() // 2, altura // 2 - texto.get_height() // 0.5))
 
 
-        texto1 = fonte.render(f"Ultima pontuação {pontuacao}", True, (255, 255, 255))
-        texto = fonte.render("Pressione ENTER para iniciar", True, (255, 255, 255))  # Texto branco
+        texto1 = fonte.render(f"Ultima pontuação {pontuacao}", True, branco)
+        texto = fonte.render("Pressione ENTER para iniciar o jogo.", True, branco)
         tela.blit(texto, (largura // 2 - texto.get_width() // 2, altura // 2 - texto.get_height() // 2))
         tela.blit(texto1, (largura // 2 - texto1.get_width() // 2, altura // 2 + texto.get_height()))
 
         pygame.display.flip()  # Atualiza a tela
-        clock.tick(60)  # Limita a taxa de atualização da tela para 30 frames por segundo
-
-    else:
-        cadastra_usua(nome_jogador, pontuacao)
 
 
+def mostra_lista():
+    em_pagina = True;
+
+    lista_usuarios = get_list_usuarios();
+
+    tela.fill(preto)
+
+    while em_pagina:
+        # Renderiza a lista
+        for i, item in enumerate(lista_usuarios):
+            texto = fonte.render(f"{i + 1}. Nome: {item[0]} | Pontuação: {item[1]} | Data da tentativa: {item[2]}", 1, branco)
+
+            tela.blit(texto, (30, 50 + i * 40))
+
+        texto_fim = fonte.render("Pressione 1 para jogar novamente | Pressione 2 para sair", 1, branco)
+
+        tela.blit(texto_fim, (1, 1))
+
+        pygame.display.flip()
+
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
+                em_pagina = False
+
+            if e.type == pygame.KEYDOWN:
+                if e.key == 49:
+                    em_pagina = False;
+                    mostrar_menu();
+                    sys.exit()
+
+                if e.key == 50:
+                    em_pagina = False;
+                    sys.exit()
 
 
+def inicia_game():
+    em_game = True;
+
+    while em_game:
+
+        tela.fill(preto);
+        texto = fonte.render("Tecle 1 para Jogar | Tecle 2 para ver as pontuações.", True, branco);
+        tela.blit(texto, (largura // 2 - texto.get_width() // 2, altura // 2 - texto.get_height() // 0.5));
+        pygame.display.flip();
+
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
+                em_game = False
+                sys.exit()
+
+            if e.type == pygame.KEYDOWN:
+                if e.key == 49:
+                    mostrar_menu()
+                    em_game = False
+                    sys.exit()
 
 
+                elif e.key == 50:
+                    mostra_lista()
+                    em_game = False
+                    sys.exit()
 
+                else:
+                    texto_validacao = fonte.render('Pressione uma tecla válida.', True, branco)
+                    tela.blit(texto_validacao, (1, 1))
+                    pygame.display.flip()
+    pygame.quit()
+    sys.exit()
+
+
+inicia_game()
